@@ -32,7 +32,6 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
 
   $cordovaGeolocation.getCurrentPosition(options).then(function(position){
     var userLocation =  new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-
     function locationController(controlDiv, map){
       //css
       var Markr = document.createElement('div');
@@ -72,11 +71,42 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
 
+
     $scope.map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
     infoWindow = new google.maps.InfoWindow();
     service = new google.maps.places.PlacesService($scope.map);
     $scope.map.addListener('idle', performSearch);
+    $scope.circle = new google.maps.Circle({
+      strokeColor: '#FF0000',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#FF0000',
+      fillOpacity: 0.35,
+      map: $scope.map,
+      center: userLocation,
+      radius: 25
+    });
+    $scope.map.addListener('zoom_changed',function(){
+      var zoom = $scope.map.getZoom();
+      console.log(zoom);
+      switch (zoom) {
+        case 19:
+          $scope.circle.setRadius(10);
+          break;
+        case 18:
+          $scope.circle.setRadius(110);
+          break;
+        case 15:
+          $scope.circle.setRadius(300);
+          break;
+        case 13:
+          $scope.circle.setRadius(1000);
+          break;
+        default:
+
+      }
+    });
 
     function performSearch() {
       var request = {
@@ -132,17 +162,6 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
     var rangeCon = new locationController(requiredDIV,$scope.map);
     requiredDIV.index = 1;
     $scope.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(requiredDIV);
-
-    $scope.circle = new google.maps.Circle({
-      strokeColor: '#FF0000',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#FF0000',
-      fillOpacity: 0.35,
-      map: $scope.map,
-      center: userLocation,
-      radius: 25
-    })
 
   }, function(error){
     console.log("Could not get location");
