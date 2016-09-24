@@ -23,7 +23,7 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
   });
 })
 
-.controller('MapCtrl', function($scope, $state, $cordovaGeolocation) {
+.controller('MapCtrl', function($scope, $state, $cordovaGeolocation, $compile) {
 
   var service;
   var infoWindow;
@@ -32,6 +32,7 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
 
   $cordovaGeolocation.getCurrentPosition(options).then(function(position){
     var userLocation =  new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
     function locationController(controlDiv, map){
       //css
       var Markr = document.createElement('div');
@@ -72,41 +73,18 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
     };
 
 
+        var contentString = "<div><a ng-click='clickTest()'>Click me!</a></div>";
+           var compiled = $compile(contentString)($scope);
+
+           var infowindow = new google.maps.InfoWindow({
+             content: compiled[0]
+           });
+
     $scope.map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
     infoWindow = new google.maps.InfoWindow();
     service = new google.maps.places.PlacesService($scope.map);
     $scope.map.addListener('idle', performSearch);
-    $scope.circle = new google.maps.Circle({
-      strokeColor: '#FF0000',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#FF0000',
-      fillOpacity: 0.35,
-      map: $scope.map,
-      center: userLocation,
-      radius: 25
-    });
-    $scope.map.addListener('zoom_changed',function(){
-      var zoom = $scope.map.getZoom();
-      console.log(zoom);
-      switch (zoom) {
-        case 19:
-          $scope.circle.setRadius(10);
-          break;
-        case 18:
-          $scope.circle.setRadius(110);
-          break;
-        case 15:
-          $scope.circle.setRadius(300);
-          break;
-        case 13:
-          $scope.circle.setRadius(1000);
-          break;
-        default:
-
-      }
-    });
 
     function performSearch() {
       var request = {
@@ -124,6 +102,7 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
         addMarker(result);
       }
     }
+
     function addMarker(place) {
       var marker = new google.maps.Marker({
         map: $scope.map,
@@ -141,14 +120,27 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
             console.error(status);
             return;
           }
-          infoWindow.setContent(result.name + result.formatted_phone_number);
+          infoWindow.setContent('<div id="content">'+
+      '<div id="siteNotice">'+
+      '</div>'+
+      '<h1 id="firstHeading" class="firstHeading">'+ result.name +'</h1>'+
+      '<div id="bodyContent">'+
+      '<input type="text" placeholder="Compra">' +
+      '<input type="text" placeholder="Venta">' +
+      '<input type="text" placeholder="Comision">' +
+      '</div>' +
+      '<div id="page1-button-bar1" class="button-bar"></div>' +
+      '<div id="page1-button-bar2" class="button-bar">' +
+      '<button id="page1-button1" type="button" class="button button-dark button-block"><i class="ion-android-navigate"></i></button> ' +
+      '<button id="page1-button2" type="button" class="button button-dark button-block"><i class="ion-ios-checkmark"></i></button> ' +
+      '<button id="page1-button3" type="button" class="button button-dark button-block"><i class="ion-star"></i></button> ' +
+      '</div>' +
+      '</div>'+
+      '</div>' + result.formatted_phone_number);
           infoWindow.open($scope.map, marker);
         });
       });
-    }
-
-
-
+    };
     $scope.marker = new google.maps.Marker({
       position: userLocation,
       icon: 'img/usr.png',
@@ -163,7 +155,20 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.directives
     requiredDIV.index = 1;
     $scope.map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(requiredDIV);
 
-  }, function(error){
+    $scope.circle = new google.maps.Circle({
+      strokeColor: '#FF0000',
+      strokeOpacity: 0.8,
+      strokeWeight: 2,
+      fillColor: '#FF0000',
+      fillOpacity: 0.35,
+      map: $scope.map,
+      center: userLocation,
+      radius: 25
+    })
+
+  },
+  function(error){
     console.log("Could not get location");
+    console.log(error);
   });
 });
